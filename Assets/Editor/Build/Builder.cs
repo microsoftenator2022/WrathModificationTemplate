@@ -30,18 +30,7 @@ namespace OwlcatModification.Editor.Build
 
         public static void BuildMicroWrathAssets()
 		{
-			ProjectSetup.MicroWrathProjectSetup();
-
-            if (!File.Exists(Path.Combine(ProjectSetup.WrathPath, "Bundles/utility_shaders")))
-			{
-                File.Copy(
-                    Path.Combine(ProjectSetup.WrathPath, "Bundles/utility_shaders"),
-                    "Assets/RenderPipeline/utility_shaders");
-                
-				ToolsMenu.SetupRenderPipeline();
-            }
-            
-            var mod = Modifications.FirstOrDefault(m => m.Manifest.UniqueName == "MicroWrathAssets");
+			var mod = Modifications.FirstOrDefault(m => m.Manifest.UniqueName == "MicroWrathAssets");
 
 			if (mod == null)
 			{
