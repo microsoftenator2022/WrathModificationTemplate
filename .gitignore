@@ -10,3 +10,11 @@ Assets/PathfinderAssemblies*
 Assets/RenderPipeline/*
 !Assets/RenderPipeline/OwlcatShaders*
 !Assets/RenderPipeline/UnityShaders*
+
+**/*.csproj
+**/.vsconfig
+Packages/packages-lock.json
+ProjectSettings/PackageManagerSettings.asset
+ProjectSettings/VersionControlSettings.asset
+**/*.sln
+UserSettings/

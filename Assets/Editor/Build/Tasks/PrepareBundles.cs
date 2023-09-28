@@ -48,19 +48,19 @@ namespace OwlcatModification.Editor.Build.Tasks
 			string[] assetGuids = AssetDatabase.FindAssets("t:Object", new[] {m_ModificationParameters.ContentPath});
 			foreach (string assetGuid in assetGuids)
 			{
-				string assetPath = AssetDatabase.GUIDToAssetPath(assetGuid);
-				string bundleName = m_LayoutManager.GetBundleForAssetPath(assetPath, m_ModificationParameters.TargetFolderName);
-				if (bundleName == null)
-				{
-					continue;
-				}
+                string assetPath = AssetDatabase.GUIDToAssetPath(assetGuid);
+                string bundleName = m_LayoutManager.GetBundleForAssetPath(assetPath, m_ModificationParameters.TargetFolderName);
+                if (bundleName == null || bundleName.EndsWith("_content"))
+                {
+                    bundleName = "assets_all";
+                }
 
-				if (!m_Tracker.UpdateInfo(assetPath))
-				{
-					return ReturnCode.Canceled;
-				}
+                if (!m_Tracker.UpdateInfo(assetPath))
+                {
+                    return ReturnCode.Canceled;
+                }
 
-				var guid = new GUID(assetGuid);
+                var guid = new GUID(assetGuid);
 				// asset already added to bundle by ExtractBlueprintDirectReferences
 				if (buildContent.Addresses.ContainsKey(guid))
 				{
