@@ -17,6 +17,26 @@ namespace OwlcatModification.Editor.Build
 {
 	public static class Builder
 	{
+		public static IEnumerable<Modification> Modifications =>
+            AssetDatabase.FindAssets($"t:{nameof(Modification)}")
+                .Select(AssetDatabase.GUIDToAssetPath)
+                .Select(AssetDatabase.LoadAssetAtPath<Modification>);
+
+        public static void BuildMicroWrathAssets()
+		{
+			var mod = Modifications.FirstOrDefault(m => m.Manifest.UniqueName == "MicroWrathAssets");
+
+			if (mod == null)
+			{
+				Debug.LogError("Modification not found");
+				return;
+			}
+
+			Build(mod);
+
+			Debug.Log("Build complete");
+		}
+
 		public static ReturnCode Build(Modification modification)
 		{
 			string sourcePath = Path.GetDirectoryName(AssetDatabase.GetAssetPath(modification));
