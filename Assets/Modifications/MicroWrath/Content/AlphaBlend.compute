@@ -1,0 +1,35 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+Texture2D<float4> Background;
+Texture2D<float4> Foreground;
+
+RWTexture2D<float4> Output;
+
+RWStructuredBuffer<float> RectPosition;
+
+[numthreads(8, 8, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    float xPos = RectPosition.Load(0);
+    float yPos = RectPosition.Load(1);
+    float fgX = RectPosition.Load(2);
+    float fgY = RectPosition.Load(3);
+    float width = RectPosition.Load(4);
+    float height = RectPosition.Load(5);
+    
+    float4 background = Background[id.xy];
+    
+    float4 foreground = float4(0, 0, 0, 0);
+    
+    if (id.x >= uint(xPos) && id.y >= uint(yPos) && id.x < uint(xPos + width) && id.y < uint(yPos + width))
+    {
+        foreground = Foreground[uint2(id.x - xPos + fgX, id.y - yPos + fgY)];
+    }
+    
+    float s = 1 - clamp(background.a - foreground.a, 0, 1);
+    float4 p = lerp(background, foreground, s);
+    p.a = clamp(background.a + foreground.a, 0, 1);
+    
+    Output[id.xy] = p;
+}
