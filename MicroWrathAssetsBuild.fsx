@@ -26,9 +26,9 @@ let run args =
 printf "Setup..."
 let src = run setup
 if src <> 0 then failwith $"Error code {src} in setup"
-printfn "Done"
+printfn " Done"
 
-printfn "Build"
+printf "Build..."
 let brc = run build
 if brc <> 0 then failwith $"Error code {brc} in build"
-printfn "Done"
+printfn " Done"
