@@ -3,8 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Kingmaker.Modding;
+using Kingmaker.Utility;
+
 using OwlcatModification.Editor.Build.Context;
 using OwlcatModification.Editor.Build.Tasks;
+using OwlcatModification.Editor.Setup;
+
 using UnityEditor;
 using UnityEditor.Build.Pipeline;
 using UnityEditor.Build.Pipeline.Interfaces;
@@ -17,6 +21,37 @@ namespace OwlcatModification.Editor.Build
 {
 	public static class Builder
 	{
+		public static IEnumerable<Modification> Modifications =>
+            AssetDatabase.FindAssets($"t:{nameof(Modification)}")
+                .Select(AssetDatabase.GUIDToAssetPath)
+                .Select(AssetDatabase.LoadAssetAtPath<Modification>);
+
+        public static void BuildMicroWrathAssets()
+		{
+			ProjectSetup.MicroWrathProjectSetup();
+
+            if (!File.Exists(Path.Combine(ProjectSetup.WrathPath, "Bundles/utility_shaders")))
+			{
+                File.Copy(
+                    Path.Combine(ProjectSetup.WrathPath, "Bundles/utility_shaders"),
+                    "Assets/RenderPipeline/utility_shaders");
+                
+				ToolsMenu.SetupRenderPipeline();
+            }
+            
+            var mod = Modifications.FirstOrDefault(m => m.Manifest.UniqueName == "MicroWrathAssets");
+
+			if (mod == null)
+			{
+				Debug.LogError("Modification not found");
+				return;
+			}
+
+			Build(mod);
+
+			Debug.Log("Build complete");
+		}
+
 		public static ReturnCode Build(Modification modification)
 		{
 			string sourcePath = Path.GetDirectoryName(AssetDatabase.GetAssetPath(modification));

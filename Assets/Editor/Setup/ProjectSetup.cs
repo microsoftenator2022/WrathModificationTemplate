@@ -7,7 +7,7 @@ namespace OwlcatModification.Editor.Setup
 {
 	public static class ProjectSetup
 	{
-		private const string WotrDirectoryKey = "wotr_directory";
+		public const string WotrDirectoryKey = "wotr_directory";
 		
 		[MenuItem("Modification Tools/Setup project", false, -1000)]
 		public static void Setup()
@@ -49,22 +49,56 @@ namespace OwlcatModification.Editor.Setup
 				"Owlcat.SharedTypes.dll"
 			};
 
-			const string targetAssembliesDirectory = "Assets/PathfinderAssemblies";
+            bool SkipAssembly(string filename)
+            {
+                return
+					skipAssemblies.Contains(filename) ||
+					filename.StartsWith("System") ||
+					(filename.StartsWith("UnityEngine") && !filename.StartsWith("UnityEngine.UI"));
+            }
+
+            const string targetAssembliesDirectory = "Assets/PathfinderAssemblies";
 			Directory.CreateDirectory(targetAssembliesDirectory);
 
 			string assembliesDirectory = Path.Combine(wotrDirectory, "Wrath_Data/Managed");
 			foreach (string assemblyPath in Directory.GetFiles(assembliesDirectory, "*.dll"))
 			{
-				if (skipAssemblies.Any(assemblyPath.EndsWith))
+                string filename = Path.GetFileName(assemblyPath);
+                
+				if (SkipAssembly(filename))
 				{
 					continue;
 				}
 
-				string filename = Path.GetFileName(assemblyPath);
 				File.Copy(assemblyPath, Path.Combine(targetAssembliesDirectory, filename), true);
 			}
 			
 			AssetDatabase.Refresh();
 		}
-	}
+
+        public static string WrathPath
+        {
+            get
+            {
+                var wrathPath = EditorPrefs.GetString(ProjectSetup.WotrDirectoryKey, "");
+
+                if (String.IsNullOrEmpty(wrathPath))
+                {
+                    wrathPath = Environment.GetEnvironmentVariable("WrathPath");
+                }
+
+                return wrathPath;
+            }
+        }
+
+        public static void MicroWrathProjectSetup()
+        {
+            if (Directory.Exists("Assets/PathfinderAssemblies") && Directory.GetFiles("Assets/PathfinderAssemblies").Length != 0)
+            {
+				return;
+			}
+
+            SetupAssemblies(WrathPath);
+        }
+    }
 }

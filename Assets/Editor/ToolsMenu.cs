@@ -17,7 +17,7 @@ namespace OwlcatModification.Editor
 	public static class ToolsMenu
 	{
 		[MenuItem("Modification Tools/Setup render pipeline", priority = 1 - 1000)]
-		private static void SetupRenderPipeline()
+		public static void SetupRenderPipeline()
 		{
 			try
 			{
