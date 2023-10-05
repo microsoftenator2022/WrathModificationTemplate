@@ -40,7 +40,7 @@ namespace OwlcatModification.Editor.Build
             }
             
             var mod = Modifications.FirstOrDefault(m => m.Manifest.UniqueName == "MicroWrathAssets");
-
+            
 			if (mod == null)
 			{
 				Debug.LogError("Modification not found");
