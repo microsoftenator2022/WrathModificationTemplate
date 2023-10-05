@@ -30,8 +30,19 @@ namespace OwlcatModification.Editor.Build
 
         public static void BuildMicroWrathAssets()
 		{
-			var mod = Modifications.FirstOrDefault(m => m.Manifest.UniqueName == "MicroWrathAssets");
+			ProjectSetup.MicroWrathProjectSetup();
 
+            if (!File.Exists("Assets/RenderPipeline/utility_shaders"))
+			{
+                File.Copy(
+                    Path.Combine(ProjectSetup.WrathPath, "Bundles/utility_shaders"),
+                    "Assets/RenderPipeline/utility_shaders");
+                
+				ToolsMenu.SetupRenderPipeline();
+            }
+            
+            var mod = Modifications.FirstOrDefault(m => m.Manifest.UniqueName == "MicroWrathAssets");
+            
 			if (mod == null)
 			{
 				Debug.LogError("Modification not found");
