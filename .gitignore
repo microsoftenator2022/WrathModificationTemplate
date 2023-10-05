@@ -18,3 +18,4 @@ ProjectSettings/PackageManagerSettings.asset
 ProjectSettings/VersionControlSettings.asset
 **/*.sln
 UserSettings/
+**/.vs/
