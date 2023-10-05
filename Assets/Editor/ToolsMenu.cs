@@ -18,22 +18,22 @@ using UnityEngine.Rendering;
 
 namespace OwlcatModification.Editor
 {
-    public static class ToolsMenu
-    {
-        [MenuItem("Modification Tools/Setup render pipeline", priority = 1 - 1000)]
-        public static void SetupRenderPipeline()
-        {
-            try
-            {
-                void SetPrivateValue(object target, string fieldName, object value)
-                {
-                    var t = target.GetType();
-                    var field = t.GetField(fieldName,
-                        BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.GetField);
-                    if (field == null)
-                        throw new Exception($"Missing field: {t.Name}.{fieldName}");
-                    field.SetValue(target, value);
-                }
+	public static class ToolsMenu
+	{
+		[MenuItem("Modification Tools/Setup render pipeline", priority = 1 - 1000)]
+		public static void SetupRenderPipeline()
+		{
+			try
+			{
+				void SetPrivateValue(object target, string fieldName, object value)
+				{
+					var t = target.GetType();
+					var field = t.GetField(fieldName,
+						BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.GetField);
+					if (field == null)
+						throw new Exception($"Missing field: {t.Name}.{fieldName}");
+					field.SetValue(target, value);
+				}
 
                 const string directoryPath = "Assets/RenderPipeline";
 

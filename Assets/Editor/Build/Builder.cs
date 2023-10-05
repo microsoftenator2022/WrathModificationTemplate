@@ -21,47 +21,49 @@ using UnityEngine;
 
 namespace OwlcatModification.Editor.Build
 {
-    public static class Builder
-    {
-        public static IEnumerable<Modification> Modifications =>
+	public static class Builder
+	{
+		public static IEnumerable<Modification> Modifications =>
             AssetDatabase.FindAssets($"t:{nameof(Modification)}")
                 .Select(AssetDatabase.GUIDToAssetPath)
                 .Select(AssetDatabase.LoadAssetAtPath<Modification>);
 
         public static void BuildMicroWrathAssets()
-        {
-            if (!File.Exists("Assets/RenderPipeline/utility_shaders"))
-            {
+		{
+			ProjectSetup.MicroWrathProjectSetup();
+
+            if (!File.Exists(Path.Combine(ProjectSetup.WrathPath, "Bundles/utility_shaders")))
+			{
                 File.Copy(
                     Path.Combine(ProjectSetup.WrathPath, "Bundles/utility_shaders"),
                     "Assets/RenderPipeline/utility_shaders");
-
-                ToolsMenu.SetupRenderPipeline();
+                
+				ToolsMenu.SetupRenderPipeline();
             }
-
+            
             var mod = Modifications.FirstOrDefault(m => m.Manifest.UniqueName == "MicroWrathAssets");
 
-            if (mod == null)
-            {
-                Debug.LogError("Modification not found");
-                return;
-            }
+			if (mod == null)
+			{
+				Debug.LogError("Modification not found");
+				return;
+			}
 
-            Build(mod);
+			Build(mod);
 
-            Debug.Log("Build complete");
-        }
+			Debug.Log("Build complete");
+		}
 
-        public static ReturnCode Build(Modification modification)
-        {
-            string sourcePath = Path.GetDirectoryName(AssetDatabase.GetAssetPath(modification));
-            return Build(
-                modification.Manifest,
-                modification.Settings,
-                sourcePath,
-                BuilderConsts.DefaultBuildFolder,
-                null);
-        }
+		public static ReturnCode Build(Modification modification)
+		{
+			string sourcePath = Path.GetDirectoryName(AssetDatabase.GetAssetPath(modification));
+			return Build(
+				modification.Manifest, 
+				modification.Settings, 
+				sourcePath, 
+				BuilderConsts.DefaultBuildFolder, 
+				null);
+		}
 
         public static ReturnCode Build(
             OwlcatModificationManifest manifest,

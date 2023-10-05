@@ -6,16 +6,16 @@ using UnityEditor;
 
 namespace OwlcatModification.Editor.Setup
 {
-    public static class ProjectSetup
-    {
-        public const string WotrDirectoryKey = "wotr_directory";
-
-        [MenuItem("Modification Tools/Setup project", false, -1000)]
-        public static void Setup()
-        {
-            try
-            {
-                EditorUtility.DisplayProgressBar("Setup project", "", 0);
+	public static class ProjectSetup
+	{
+		public const string WotrDirectoryKey = "wotr_directory";
+		
+		[MenuItem("Modification Tools/Setup project", false, -1000)]
+		public static void Setup()
+		{
+			try
+			{
+				EditorUtility.DisplayProgressBar("Setup project", "", 0);
 
                 string wotrDirectory = EditorUtility.OpenFolderPanel(
                     "Pathfinder: Wrath of the Righteous folder", EditorPrefs.GetString(WotrDirectoryKey, ""), "");
@@ -62,29 +62,21 @@ namespace OwlcatModification.Editor.Setup
             const string targetAssembliesDirectory = "Assets/PathfinderAssemblies";
             Directory.CreateDirectory(targetAssembliesDirectory);
 
-            string assembliesDirectory = Path.Combine(wotrDirectory, "Wrath_Data/Managed");
-
-            int newAssemblies = 0;
-
-            foreach (string assemblyPath in Directory.GetFiles(assembliesDirectory, "*.dll"))
-            {
+			string assembliesDirectory = Path.Combine(wotrDirectory, "Wrath_Data/Managed");
+			foreach (string assemblyPath in Directory.GetFiles(assembliesDirectory, "*.dll"))
+			{
                 string filename = Path.GetFileName(assemblyPath);
+                
+				if (SkipAssembly(filename))
+				{
+					continue;
+				}
 
-                if (SkipAssembly(filename))
-                {
-                    continue;
-                }
-
-                if (!File.Exists(Path.Combine(targetAssembliesDirectory, filename)))
-                {
-                    File.Copy(assemblyPath, Path.Combine(targetAssembliesDirectory, filename), true);
-                    newAssemblies++;
-                }
-            }
-
-            if (newAssemblies > 0)
-                AssetDatabase.Refresh();
-        }
+				File.Copy(assemblyPath, Path.Combine(targetAssembliesDirectory, filename), true);
+			}
+			
+			AssetDatabase.Refresh();
+		}
 
         public static string WrathPath
         {
@@ -99,6 +91,16 @@ namespace OwlcatModification.Editor.Setup
 
                 return wrathPath;
             }
+        }
+
+        public static void MicroWrathProjectSetup()
+        {
+            if (Directory.Exists("Assets/PathfinderAssemblies") && Directory.GetFiles("Assets/PathfinderAssemblies").Length != 0)
+            {
+				return;
+			}
+
+            SetupAssemblies(WrathPath);
         }
     }
 }
