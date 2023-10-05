@@ -30,7 +30,7 @@ namespace OwlcatModification.Editor.Build
 		{
 			ProjectSetup.MicroWrathProjectSetup();
 
-            if (!File.Exists(Path.Combine(ProjectSetup.WrathPath, "Bundles/utility_shaders")))
+            if (!File.Exists("Assets/RenderPipeline/utility_shaders"))
 			{
                 File.Copy(
                     Path.Combine(ProjectSetup.WrathPath, "Bundles/utility_shaders"),
