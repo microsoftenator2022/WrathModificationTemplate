@@ -55,6 +55,12 @@ namespace OwlcatModification.Editor.Build.Tasks
 				Path.Combine(intermediateFolderPath, Kingmaker.Modding.OwlcatModification.SettingsFileName),
 				Path.Combine(targetFolderPath, Kingmaker.Modding.OwlcatModification.SettingsFileName));
 
+			const string bundlesLayoutFileName = "BundlesLayout.json";
+
+			File.Copy(
+				Path.Combine(intermediateFolderPath, bundlesLayoutFileName),
+				Path.Combine(targetFolderPath, bundlesLayoutFileName));
+
 			return ReturnCode.Success;
 		}
 	}
