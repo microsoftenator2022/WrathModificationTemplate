@@ -5,15 +5,18 @@ let unityPath = @"C:\Program Files\Unity\Hub\Editor\2020.3.48f1\Editor\Unity.exe
 
 if unityPath |> (not << File.Exists) then failwith $"Unity not found at {unityPath}"
 
-let setup = $"""-quit -batchmode -nographics -ignoreCompilerErrors -executeMethod "OwlcatModification.Editor.Setup.ProjectSetup.MicroWrathProjectSetup" -projectPath ./"""
-let build = $"""-quit -batchmode -nographics -executeMethod "OwlcatModification.Editor.Build.Builder.BuildMicroWrathAssets" -projectPath ./"""
+let args = fsi.CommandLineArgs
+let scriptDirectory = args[0] |> Path.GetDirectoryName
+
+let setup = $"""-quit -batchmode -nographics -ignoreCompilerErrors -executeMethod "OwlcatModification.Editor.Setup.ProjectSetup.MicroWrathProjectSetup" -projectPath"""
+let build = $"""-quit -batchmode -nographics -executeMethod "OwlcatModification.Editor.Build.Builder.BuildMicroWrathAssets" -projectPath"""
 
 let run args =
     use proc = new Process()
     let psi = ProcessStartInfo()
 
-    psi.FileName <- unityPath    
-    psi.Arguments <- args
+    psi.FileName <- unityPath
+    psi.Arguments <- $"{args} {scriptDirectory}"
 
     proc.StartInfo <- psi
 
