@@ -63,6 +63,9 @@ namespace OwlcatModification.Editor.Setup
             Directory.CreateDirectory(targetAssembliesDirectory);
 
 			string assembliesDirectory = Path.Combine(wotrDirectory, "Wrath_Data/Managed");
+
+			int newAssemblies = 0;
+
 			foreach (string assemblyPath in Directory.GetFiles(assembliesDirectory, "*.dll"))
 			{
                 string filename = Path.GetFileName(assemblyPath);
@@ -72,10 +75,15 @@ namespace OwlcatModification.Editor.Setup
 					continue;
 				}
 
-				File.Copy(assemblyPath, Path.Combine(targetAssembliesDirectory, filename), true);
+				if (!File.Exists(Path.Combine(targetAssembliesDirectory, filename)))
+				{
+					File.Copy(assemblyPath, Path.Combine(targetAssembliesDirectory, filename), true);
+					newAssemblies++;
+				}
 			}
 			
-			AssetDatabase.Refresh();
+			if (newAssemblies > 0)
+				AssetDatabase.Refresh();
 		}
 
         public static string WrathPath
@@ -95,10 +103,10 @@ namespace OwlcatModification.Editor.Setup
 
         public static void MicroWrathProjectSetup()
         {
-            if (Directory.Exists("Assets/PathfinderAssemblies") && Directory.GetFiles("Assets/PathfinderAssemblies").Length != 0)
-            {
-				return;
-			}
+			//if (Directory.Exists("Assets/PathfinderAssemblies") && Directory.GetFiles("Assets/PathfinderAssemblies").Length != 0)
+			//{
+			//	return;
+			//}
 
             SetupAssemblies(WrathPath);
         }
