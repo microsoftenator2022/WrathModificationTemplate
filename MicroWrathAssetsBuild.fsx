@@ -26,12 +26,16 @@ let run args =
 
     proc.ExitCode
 
-printf "Setup..."
+printfn ""
+printfn "Setup Project..."
 let src = run setup
 if src <> 0 then failwith $"Error code {src} in setup"
-printfn " Done"
+printfn ""
+printfn "Setup Complete"
 
-printf "Build..."
+printfn ""
+printfn "Build Project..."
 let brc = run build
 if brc <> 0 then failwith $"Error code {brc} in build"
-printfn " Done"
+printfn ""
+printfn "Build Complete"
