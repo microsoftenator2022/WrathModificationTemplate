@@ -30,9 +30,13 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     float ba = clamp(background.a, 0, 1);
     float fa = clamp(foreground.a, 0, 1);
     
-    float s = 1 - (ba - fa);
-    float4 p = lerp(background, foreground, s);
-    p.a = clamp(ba + fa, 0, 1);
+    float4 p = 0;
+    
+    p.a = lerp(ba, 1, fa);
+    p.rgb = lerp(background.rgb * ba, foreground.rgb, fa);
+    
+    float d = p.a > 0 ? (1.0f / p.a) : 1.0f;
+    p.rgb = p.rgb * d;
     
     Output[id.xy] = p;
 }
