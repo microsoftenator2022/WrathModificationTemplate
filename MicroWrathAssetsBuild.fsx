@@ -5,15 +5,18 @@ let unityPath = @"C:\Program Files\Unity\Hub\Editor\2020.3.48f1\Editor\Unity.exe
 
 if unityPath |> (not << File.Exists) then failwith $"Unity not found at {unityPath}"
 
-let setup = $"""-quit -batchmode -nographics -ignoreCompilerErrors -executeMethod "OwlcatModification.Editor.Setup.ProjectSetup.MicroWrathProjectSetup" -projectPath ./"""
-let build = $"""-quit -batchmode -nographics -executeMethod "OwlcatModification.Editor.Build.Builder.BuildMicroWrathAssets" -projectPath ./"""
+let args = fsi.CommandLineArgs
+let scriptDirectory = args[0] |> Path.GetDirectoryName
+
+let setup = $"""-quit -batchmode -nographics -ignoreCompilerErrors -executeMethod "OwlcatModification.Editor.Setup.ProjectSetup.MicroWrathProjectSetup" -projectPath"""
+let build = $"""-quit -batchmode -nographics -executeMethod "OwlcatModification.Editor.Build.Builder.BuildMicroWrathAssets" -projectPath"""
 
 let run args =
     use proc = new Process()
     let psi = ProcessStartInfo()
 
-    psi.FileName <- unityPath    
-    psi.Arguments <- args
+    psi.FileName <- unityPath
+    psi.Arguments <- $"{args} {scriptDirectory}"
 
     proc.StartInfo <- psi
 
@@ -23,12 +26,16 @@ let run args =
 
     proc.ExitCode
 
-printf "Setup..."
+printfn ""
+printfn "Setup Project..."
 let src = run setup
 if src <> 0 then failwith $"Error code {src} in setup"
-printfn " Done"
+printfn ""
+printfn "Setup Complete"
 
-printf "Build..."
+printfn ""
+printfn "Build Project..."
 let brc = run build
 if brc <> 0 then failwith $"Error code {brc} in build"
-printfn " Done"
+printfn ""
+printfn "Build Complete"

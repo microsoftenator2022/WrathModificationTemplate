@@ -6,7 +6,7 @@ Texture2D<float4> Foreground;
 
 RWTexture2D<float4> Output;
 
-RWStructuredBuffer<float> RectPosition;
+StructuredBuffer<float> RectPosition;
 
 [numthreads(8, 8, 1)]
 void CSMain(uint3 id : SV_DispatchThreadID)
@@ -27,9 +27,12 @@ void CSMain(uint3 id : SV_DispatchThreadID)
         foreground = Foreground[uint2(id.x - xPos + fgX, id.y - yPos + fgY)];
     }
     
-    float s = 1 - clamp(background.a - foreground.a, 0, 1);
+    float ba = clamp(background.a, 0, 1);
+    float fa = clamp(foreground.a, 0, 1);
+    
+    float s = 1 - (ba - fa);
     float4 p = lerp(background, foreground, s);
-    p.a = clamp(background.a + foreground.a, 0, 1);
+    p.a = clamp(ba + fa, 0, 1);
     
     Output[id.xy] = p;
 }
