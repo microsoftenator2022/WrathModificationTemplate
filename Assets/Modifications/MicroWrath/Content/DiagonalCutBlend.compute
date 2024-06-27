@@ -1,0 +1,47 @@
+#pragma kernel CSMain
+
+Texture2D<float4> InputA;
+Texture2D<float4> InputB;
+
+RWTexture2D<float4> Output;
+
+StructuredBuffer<float> Params;
+
+SamplerState InputALinearMirrorOnceSampler;
+SamplerState InputBLinearMirrorOnceSampler;
+
+[numthreads(8, 8, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    float x = id.x;
+    float y = id.y;
+    
+    float offset = Params.Load(0);
+
+    float width = Params.Load(1);
+    float height = Params.Load(2);
+    
+    float invertX = Params.Load(3);
+    float invertY = Params.Load(4);
+    
+    if (invertX >= 1)
+    {
+        x = width - x;
+    }
+    
+    if (invertY >= 1)
+    {
+        y = height - y;
+    }
+    
+    x += offset;
+
+    float4 result;
+    
+    if (y - x > 0)
+        result = InputA[id.xy];
+    else
+        result = InputB[id.xy];
+    
+    Output[id.xy] = result;
+}
