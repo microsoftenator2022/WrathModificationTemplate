@@ -129,9 +129,9 @@ namespace OwlcatModification.Editor.Build.Tasks
             }
 
             foreach (var bundle in layout)
-            {
-                buildContent.BundleLayout[Path.Combine(BuilderConsts.OutputBundles, bundle.Key)] = bundle.Value;
-            }
+			{
+				buildContent.BundleLayout[Path.Combine(BuilderConsts.OutputBundles, bundle.Key)] = bundle.Value;
+			}
 
             CopyLayout(layout, m_ModificationSettings.Settings.BundlesLayout);
 

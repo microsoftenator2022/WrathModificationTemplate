@@ -20,19 +20,23 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     
     float4 background = Background[id.xy];
     
-    float4 foreground = float4(0, 0, 0, 0);
+    float4 foreground = 0;
     
     if (id.x >= uint(xPos) && id.y >= uint(yPos) && id.x < uint(xPos + width) && id.y < uint(yPos + width))
     {
         foreground = Foreground[uint2(id.x - xPos + fgX, id.y - yPos + fgY)];
     }
     
-    float ba = clamp(background.a, 0, 1);
-    float fa = clamp(foreground.a, 0, 1);
+    float ba = saturate(background.a);
+    float fa = saturate(foreground.a);
     
     float4 p = 0;
     
     p.a = lerp(ba, 1, fa);
+    
+    // this just looks worse
+    //p.a = lerp(ba, 1, smoothstep(0, 1, fa));
+    
     p.rgb = lerp(background.rgb * ba, foreground.rgb, fa);
     
     float d = p.a > 0 ? (1.0f / p.a) : 1.0f;
