@@ -77,8 +77,10 @@ namespace OwlcatModification.Editor.Build.Tasks
 			//			pair => pair.Item1,
 			//			pair => pair.Item2)));
 
-			File.WriteAllText(Path.Combine(buildFolderPath, "BundlesLayout.json"),
-				JsonConvert.SerializeObject(m_ModificationSettings.Settings.BundlesLayout.GuidToBundle.Values
+			var values = m_ModificationSettings.Settings.BundlesLayout.GuidToBundle.Values.ToArray();
+
+            File.WriteAllText(Path.Combine(buildFolderPath, "BundlesLayout.json"),
+				JsonConvert.SerializeObject(values.Distinct()
 					.ToDictionary(
 						value => value,
 						value => m_ModificationSettings.Settings.BundlesLayout.GuidToBundle.Keys

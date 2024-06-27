@@ -124,7 +124,7 @@ namespace OwlcatModification.Editor.Build.Tasks
 				}
 			}
 
-			foreach (var bundle in layout)
+            foreach (var bundle in layout)
 			{
 				buildContent.BundleLayout[Path.Combine(BuilderConsts.OutputBundles, bundle.Key)] = bundle.Value;
 			}
