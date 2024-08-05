@@ -47,7 +47,8 @@ namespace OwlcatModification.Editor.Setup
             string[] skipAssemblies = {
                 "mscorlib.dll",
                 "Unity.ScriptableBuildPipeline.dll",
-                "Owlcat.SharedTypes.dll"
+                "Owlcat.SharedTypes.dll",
+                "Unity.TextMeshPro.dll"
             };
 
             bool SkipAssembly(string filename)
@@ -55,7 +56,7 @@ namespace OwlcatModification.Editor.Setup
                 return
                     skipAssemblies.Contains(filename) ||
                     filename.StartsWith("System") ||
-                    (filename.StartsWith("UnityEngine") && !filename.StartsWith("UnityEngine.UI"));
+                    (filename.StartsWith("UnityEngine"));
             }
 
             const string targetAssembliesDirectory = "Assets/PathfinderAssemblies";
