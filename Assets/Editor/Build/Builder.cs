@@ -2,205 +2,240 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+
 using Kingmaker.Modding;
+using Kingmaker.Utility;
+
 using OwlcatModification.Editor.Build.Context;
 using OwlcatModification.Editor.Build.Tasks;
+using OwlcatModification.Editor.Setup;
+
 using UnityEditor;
 using UnityEditor.Build.Pipeline;
 using UnityEditor.Build.Pipeline.Interfaces;
 using UnityEditor.Build.Pipeline.Tasks;
 using UnityEditor.Build.Pipeline.Utilities;
 using UnityEditor.Build.Player;
+
 using UnityEngine;
 
 namespace OwlcatModification.Editor.Build
 {
-	public static class Builder
-	{
-		public static ReturnCode Build(Modification modification)
-		{
-			string sourcePath = Path.GetDirectoryName(AssetDatabase.GetAssetPath(modification));
-			return Build(
-				modification.Manifest, 
-				modification.Settings, 
-				sourcePath, 
-				BuilderConsts.DefaultBuildFolder, 
-				null);
-		}
+    public static class Builder
+    {
+        public static IEnumerable<Modification> Modifications =>
+            AssetDatabase.FindAssets($"t:{nameof(Modification)}")
+                .Select(AssetDatabase.GUIDToAssetPath)
+                .Select(AssetDatabase.LoadAssetAtPath<Modification>);
 
-		public static ReturnCode Build(
-			OwlcatModificationManifest manifest,
-			Modification.SettingsData settings,
-			string sourceFolder,
-			string targetFolder,
-			params IContextObject[] contextObjects)
-		{
-			try
-			{
-				return BuildInternal(manifest, settings, sourceFolder, targetFolder, contextObjects);
-			}
-			catch (Exception e)
-			{
-				EditorUtility.DisplayDialog("Error!", $"{e.Message}\n\n{e.StackTrace}", "Close");
-				return ReturnCode.Exception;
-			}
-		}
+        public static void BuildMicroWrathAssets()
+        {
+            if (!File.Exists("Assets/RenderPipeline/utility_shaders"))
+            {
+                File.Copy(
+                    Path.Combine(ProjectSetup.WrathPath, "Bundles/utility_shaders"),
+                    "Assets/RenderPipeline/utility_shaders");
 
-		private static ReturnCode BuildInternal(
-			OwlcatModificationManifest manifest,
-			Modification.SettingsData settings,
-			string sourceFolder,
-			string targetFolder,
-			params IContextObject[] contextObjects)
-		{
-			if (!Path.IsPathRooted(targetFolder))
-			{
-				targetFolder = Path.Combine(Path.Combine(Application.dataPath, ".."), targetFolder);
-			}
+                ToolsMenu.SetupRenderPipeline();
+            }
 
-			string intermediateBuildFolder = Path.Combine(targetFolder, BuilderConsts.Intermediate);
-			if (Directory.Exists(targetFolder))
-			{
-				Directory.Delete(targetFolder, true);
-			}
+            var mod = Modifications.FirstOrDefault(m => m.Manifest.UniqueName == "MicroWrathAssets");
 
-			Directory.CreateDirectory(intermediateBuildFolder);
+            if (mod == null)
+            {
+                Debug.LogError("Modification not found");
+                return;
+            }
 
-			string logFilepath = Path.Combine(targetFolder, "build.log");
-			var defaultBuildTarget = EditorUserBuildSettings.activeBuildTarget;
-			var defaultBuildTargetGroup = BuildTargetGroup.Standalone;
-			var defaultBuildOptions = EditorUserBuildSettings.development
-				? ScriptCompilationOptions.DevelopmentBuild
-				: ScriptCompilationOptions.None;
-			
-			UglySBPHacks.ThreadingManager_WaitForOutstandingTasks();
-			AssetDatabase.SaveAssets();
+            Build(mod);
 
-			var buildContext = new BuildContext(contextObjects);
-			var buildParameters = buildContext.EnsureContextObject<IBundleBuildParameters>(
-				() => new BundleBuildParameters(defaultBuildTarget, defaultBuildTargetGroup, intermediateBuildFolder)
-				{
-					BundleCompression = BuildCompression.LZ4,
-					ScriptOptions = defaultBuildOptions,
-					UseCache = false,
-				});
-			
-			contextObjects = (contextObjects ?? new IContextObject[0]).Concat(new IContextObject[]
-			{
-				buildParameters,
-				buildContext.EnsureContextObject<IBundleLayoutManager>(() => new DefaultBundleLayoutManager()),
-				buildContext.EnsureContextObject<IModificationRuntimeSettings>(() => new DefaultModificationRuntimeSettings()),
-				buildContext.EnsureContextObject(() => new BuildInterfacesWrapper()),
-				buildContext.EnsureContextObject<IBuildLogger>(() => new BuildLoggerFile(logFilepath)),
-				buildContext.EnsureContextObject<IProgressTracker>(() => new ProgressLoggingTracker()),
-				buildContext.EnsureContextObject<IDependencyData>(() => new BuildDependencyData()),
-				buildContext.EnsureContextObject<IBundleWriteData>(() => new BundleWriteData()),
-				buildContext.EnsureContextObject<IBundleBuildResults>(() => new BundleBuildResults()),
-				buildContext.EnsureContextObject<IDeterministicIdentifiers>(() => new Unity5PackedIdentifiers()),
-				buildContext.EnsureContextObject<IBundleBuildContent>(() 
-					=> new BundleBuildContent(Enumerable.Empty<AssetBundleBuild>())),
-				buildContext.EnsureContextObject<IBuildCache>(
-					() => new BuildCache(buildParameters.CacheServerHost, buildParameters.CacheServerPort)),
-				buildContext.EnsureContextObject<IModificationParameters>(
-					() => new DefaultModificationParameters(manifest, settings, sourceFolder)),
-			}).ToArray();
+            Debug.Log("Build complete");
+        }
 
-			var tasksList = GetTasks().ToArray();
-			try
-			{
-				return RunTasks(tasksList, buildContext);
-			}
-			finally
-			{
-				Dispose(contextObjects, tasksList);
-			}
-		}
+        public static ReturnCode Build(Modification modification)
+        {
+            string sourcePath = Path.GetDirectoryName(AssetDatabase.GetAssetPath(modification));
+            return Build(
+                modification.Manifest,
+                modification.Settings,
+                sourcePath,
+                BuilderConsts.DefaultBuildFolder,
+                null);
+        }
 
-		private static ReturnCode RunTasks(IList<IBuildTask> tasksList, IBuildContext context)
-		{
-			var validationResult = BuildTasksRunner.Validate(tasksList, context);
-			if (validationResult < ReturnCode.Success)
-			{
-				return validationResult;
-			}
+        public static ReturnCode Build(
+            OwlcatModificationManifest manifest,
+            Modification.SettingsData settings,
+            string sourceFolder,
+            string targetFolder,
+            params IContextObject[] contextObjects)
+        {
+            try
+            {
+                return BuildInternal(manifest, settings, sourceFolder, targetFolder, contextObjects);
+            }
+            catch (Exception e)
+            {
+                EditorUtility.DisplayDialog("Error!", $"{e.Message}\n\n{e.StackTrace}", "Close");
+                return ReturnCode.Exception;
+            }
+        }
 
-			return BuildTasksRunner.Run(tasksList, context);
-		}
+        private static ReturnCode BuildInternal(
+            OwlcatModificationManifest manifest,
+            Modification.SettingsData settings,
+            string sourceFolder,
+            string targetFolder,
+            params IContextObject[] contextObjects)
+        {
+            if (!Path.IsPathRooted(targetFolder))
+            {
+                targetFolder = Path.Combine(Path.Combine(Application.dataPath, ".."), targetFolder);
+            }
 
-		private static void Dispose(IEnumerable<IContextObject> contextObjects, IEnumerable<IBuildTask> tasks)
-		{
-			foreach (var disposable in contextObjects.OfType<IDisposable>())
-			{
-				try
-				{
-					disposable.Dispose();
-				}
-				catch (Exception e)
-				{
-					BuildLogger.LogException(e);
-				}
-			}
+            string intermediateBuildFolder = Path.Combine(targetFolder, BuilderConsts.Intermediate);
+            if (Directory.Exists(targetFolder))
+            {
+                Directory.Delete(targetFolder, true);
+            }
 
-			// ReSharper disable once SuspiciousTypeConversion.Global
-			foreach (var disposable in tasks.OfType<IDisposable>())
-			{
-				try
-				{
-					disposable.Dispose();
-				}
-				catch (Exception e)
-				{
-					BuildLogger.LogException(e);
-				}
-			}
-		}
+            Directory.CreateDirectory(intermediateBuildFolder);
 
-		private static T EnsureContextObject<T>(this BuildContext context, Func<T> createDefaultObject) where T : IContextObject
-		{
-			if (!context.ContainsContextObject<T>())
-			{
-				var obj = createDefaultObject.Invoke();
-				context.SetContextObject(obj);
-				return obj;
-			}
+            string logFilepath = Path.Combine(targetFolder, "build.log");
+            var defaultBuildTarget = EditorUserBuildSettings.activeBuildTarget;
+            var defaultBuildTargetGroup = BuildTargetGroup.Standalone;
+            var defaultBuildOptions = EditorUserBuildSettings.development
+                ? ScriptCompilationOptions.DevelopmentBuild
+                : ScriptCompilationOptions.None;
 
-			return context.GetContextObject<T>();
-		}
+            UglySBPHacks.ThreadingManager_WaitForOutstandingTasks();
+            AssetDatabase.SaveAssets();
 
-		private static IEnumerable<IBuildTask> GetTasks()
-		{
-			yield return new SwitchToBuildPlatform();
+            var buildContext = new BuildContext(contextObjects);
+            var buildParameters = buildContext.EnsureContextObject<IBundleBuildParameters>(
+                () => new BundleBuildParameters(defaultBuildTarget, defaultBuildTargetGroup, intermediateBuildFolder)
+                {
+                    BundleCompression = BuildCompression.LZ4,
+                    ScriptOptions = defaultBuildOptions,
+                    UseCache = false,
+                });
 
-			yield return new PrepareBuild();
-			
-			yield return new BuildAssemblies();
+            contextObjects = (contextObjects ?? new IContextObject[0]).Concat(new IContextObject[]
+            {
+                buildParameters,
+                buildContext.EnsureContextObject<IBundleLayoutManager>(() => new DefaultBundleLayoutManager()),
+                buildContext.EnsureContextObject<IModificationRuntimeSettings>(() => new DefaultModificationRuntimeSettings()),
+                buildContext.EnsureContextObject(() => new BuildInterfacesWrapper()),
+                buildContext.EnsureContextObject<IBuildLogger>(() => new BuildLoggerFile(logFilepath)),
+                buildContext.EnsureContextObject<IProgressTracker>(() => new ProgressLoggingTracker()),
+                buildContext.EnsureContextObject<IDependencyData>(() => new BuildDependencyData()),
+                buildContext.EnsureContextObject<IBundleWriteData>(() => new BundleWriteData()),
+                buildContext.EnsureContextObject<IBundleBuildResults>(() => new BundleBuildResults()),
+                buildContext.EnsureContextObject<IDeterministicIdentifiers>(() => new Unity5PackedIdentifiers()),
+                buildContext.EnsureContextObject<IBundleBuildContent>(()
+                    => new BundleBuildContent(Enumerable.Empty<AssetBundleBuild>())),
+                buildContext.EnsureContextObject<IBuildCache>(
+                    () => new BuildCache(buildParameters.CacheServerHost, buildParameters.CacheServerPort)),
+                buildContext.EnsureContextObject<IModificationParameters>(
+                    () => new DefaultModificationParameters(manifest, settings, sourceFolder)),
+            }).ToArray();
 
-			yield return new PrepareBlueprints();
-			
-			yield return new ExtractBlueprintDirectReferences();
-			yield return new PrepareBundles();
+            var tasksList = GetTasks().ToArray();
+            try
+            {
+                return RunTasks(tasksList, buildContext);
+            }
+            finally
+            {
+                Dispose(contextObjects, tasksList);
+            }
+        }
 
-			yield return new PrepareLocalization();
+        private static ReturnCode RunTasks(IList<IBuildTask> tasksList, IBuildContext context)
+        {
+            var validationResult = BuildTasksRunner.Validate(tasksList, context);
+            if (validationResult < ReturnCode.Success)
+            {
+                return validationResult;
+            }
 
-			yield return new CheckAssetsValidity();
+            return BuildTasksRunner.Run(tasksList, context);
+        }
 
-			yield return new CalculateSceneDependencyData();
-			yield return new CalculateCustomDependencyData();
-			yield return new CalculateAssetDependencyData();
+        private static void Dispose(IEnumerable<IContextObject> contextObjects, IEnumerable<IBuildTask> tasks)
+        {
+            foreach (var disposable in contextObjects.OfType<IDisposable>())
+            {
+                try
+                {
+                    disposable.Dispose();
+                }
+                catch (Exception e)
+                {
+                    BuildLogger.LogException(e);
+                }
+            }
 
-			yield return new GenerateBundlePacking();
-			yield return new UpdateBundleObjectLayout();
-			yield return new GenerateBundleCommands();
-			yield return new GenerateSubAssetPathMaps();
-			yield return new GenerateBundleMaps();
+            // ReSharper disable once SuspiciousTypeConversion.Global
+            foreach (var disposable in tasks.OfType<IDisposable>())
+            {
+                try
+                {
+                    disposable.Dispose();
+                }
+                catch (Exception e)
+                {
+                    BuildLogger.LogException(e);
+                }
+            }
+        }
 
-			yield return new WriteSerializedFiles();
-			yield return new ArchiveAndCompressBundles();
+        private static T EnsureContextObject<T>(this BuildContext context, Func<T> createDefaultObject) where T : IContextObject
+        {
+            if (!context.ContainsContextObject<T>())
+            {
+                var obj = createDefaultObject.Invoke();
+                context.SetContextObject(obj);
+                return obj;
+            }
 
-			yield return new CreateManifestAndSettings();
+            return context.GetContextObject<T>();
+        }
 
-			yield return new PrepareArtifacts();
-			yield return new PackArtifacts();
-		}
-	}
+        private static IEnumerable<IBuildTask> GetTasks()
+        {
+            yield return new SwitchToBuildPlatform();
+
+            yield return new PrepareBuild();
+
+            yield return new BuildAssemblies();
+
+            yield return new PrepareBlueprints();
+
+            yield return new ExtractBlueprintDirectReferences();
+            yield return new PrepareBundles();
+
+            yield return new PrepareLocalization();
+
+            yield return new CheckAssetsValidity();
+
+            yield return new CalculateSceneDependencyData();
+            yield return new CalculateCustomDependencyData();
+            yield return new CalculateAssetDependencyData();
+
+            yield return new GenerateBundlePacking();
+            yield return new UpdateBundleObjectLayout();
+            yield return new GenerateBundleCommands();
+            yield return new GenerateSubAssetPathMaps();
+            yield return new GenerateBundleMaps();
+
+            yield return new WriteSerializedFiles();
+            yield return new ArchiveAndCompressBundles();
+
+            yield return new CreateManifestAndSettings();
+
+            yield return new PrepareArtifacts();
+            yield return new PackArtifacts();
+        }
+    }
 }
