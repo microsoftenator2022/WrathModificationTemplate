@@ -52,7 +52,7 @@ namespace OwlcatModification.Editor.Build.Tasks
                 string bundleName = m_LayoutManager.GetBundleForAssetPath(assetPath, assetGuid, m_ModificationParameters.TargetFolderName);
                 if (bundleName == null || bundleName.EndsWith("_content"))
                 {
-                    bundleName = "quickcast_all";
+                    bundleName = $"{m_ModificationParameters.Manifest.DisplayName}_all";
                 }
 
                 if (!m_Tracker.UpdateInfo(assetPath))

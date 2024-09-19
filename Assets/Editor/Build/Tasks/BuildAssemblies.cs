@@ -33,7 +33,7 @@ namespace OwlcatModification.Editor.Build.Tasks
             var msBuildPath = @"C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe";
             string projectPath = Path.Combine(
                 Directory.GetCurrentDirectory(),
-                "QuickCast.csproj" //THIS MUST MATCH YOUR CSPROJ FILE
+                $"{m_ModificationParameters.Manifest.DisplayName}.csproj" //THIS MUST MATCH YOUR CSPROJ FILE
             );
 
             var settings = m_BuildParameters.GetScriptCompilationSettings();
