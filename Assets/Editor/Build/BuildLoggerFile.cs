@@ -12,12 +12,12 @@ namespace OwlcatModification.Editor.Build
 
         private readonly string m_Filepath;
         private readonly StreamWriter m_Output;
-        
+
         public BuildLoggerFile(string filepath)
         {
             m_Filepath = filepath;
             m_Output = new StreamWriter(filepath);
-            
+
             Application.logMessageReceived += OnLogMessageReceived;
         }
 
@@ -53,7 +53,7 @@ namespace OwlcatModification.Editor.Build
         public void Dispose()
         {
             Application.logMessageReceived -= OnLogMessageReceived;
-            
+
             m_Output.Dispose();
 
             using (var traceStream = new StreamWriter(m_Filepath + ".trace"))

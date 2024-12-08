@@ -1,6 +1,5 @@
-﻿using System;
-using JetBrains.Annotations;
-using Kingmaker.Modding;
+﻿using Kingmaker.Modding;
+using System;
 using UnityEngine;
 
 namespace OwlcatModification.Editor

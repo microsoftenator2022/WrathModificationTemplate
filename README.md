@@ -1,39 +1,24 @@
+### This fork has the following changes
+* Owlcat.Runtime.Visual.dll has been converted to local package com.owlcat.visual
+* Added required packages to manifest to automatically download them.
+* Play Mode now works
+* Scene View now shows shaded UI objects (kuru)
+* Gizmos now are displayed (kuru)
+* Converted build script to use MSBuild (bubbles)
+* Added ProjectFilePostprocessor class to ensure proper csproj settings. Upgrades framework to 4.8.1 and forces portable PDB output.
+
 Getting started
 ===============
 
-1. Open the project using **Unity 2019.4.26f1**
+1. Open the project using **Unity 2020.3.38f1**
     * Unity console will show many compiler errors, but **don't panic**!
     * Click **Modification Tools -> Setup project** menu entry and choose _**Pathfinder: Wrath of the Righteous** installation folder_ in the dialog that will appear
     * If Unity shows you **API Update Required** dialog click **No Thanks**
     * Close and reopen project
     * Click **Modification Tools -> Setup render pipeline** menu entry
+    * Go to the the Assets\Reources folder and right click and create Position Based Dynamics Config
     * Project is now ready
-
-2. Setup your modification (take a look at _Assets/Modifications/ExampleModification_ for examples)
-    * Create a folder for your modification in **Assets/Modifications**
-    * Create **Modification** scriptable object in this folder _(right click on folder -> Create -> Modification)_
-        * Specify **Unique Name** in **Modification** scriptable object
-    * Create **Scripts** folder and **_your-modification-name_.Scripts.asmdef** file inside it _(right click on folder -> Create -> Assembly Definition)_
-    * Create **Content**, **Blueprints** and **Localization** folders as needed
-
-3. Create your modification
-
-4. Build your modification (use **Modification Tools -> Build** menu entry)
-
-5. Test your modification
-    * Copy **Build/your-modification-name** folder to **_user-folder_/AppData/LocalLow/Owlcat Games/Pathfinder Wrath Of The Righteous/Modifications**
-    * Add your modification to **_user-folder_/AppData/LocalLow/Owlcat Games/Pathfinder Wrath Of The Righteous/OwlcatModificationManagerSettings.json**
-        ```json5
-        {
-            "EnabledModifications": ["your-modification-name"] // use name from the manifest(!), not folder name
-        }
-        ```
-    * Before patch 1.1.1 there was a typo in filename used to store settings: _OwlcatModificationMana**n**gerSettings.json_. This is now corrected, please use the correct filename (the game will still find file under the old name).
-    * Run Pathfinder: Wrath of the Righteous
-
-5. Publish build results from **Build** folder
-    * _TODO_
-
+      
 Features
 ========
 
