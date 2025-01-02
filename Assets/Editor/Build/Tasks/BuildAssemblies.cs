@@ -33,7 +33,7 @@ namespace OwlcatModification.Editor.Build.Tasks
             var msBuildPath = @"C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe";
             string projectPath = Path.Combine(
                 Directory.GetCurrentDirectory(),
-                $"{m_ModificationParameters.Manifest.DisplayName}.csproj" //THIS MUST MATCH YOUR CSPROJ FILE
+                $"{m_ModificationParameters.Manifest.DisplayName}.csproj" 
             );
 
             var settings = m_BuildParameters.GetScriptCompilationSettings();
@@ -42,7 +42,7 @@ namespace OwlcatModification.Editor.Build.Tasks
             if (File.Exists(msBuildPath) && File.Exists(projectPath))
             {
                 ProcessStartInfo msBuildInfo =
-                    new ProcessStartInfo(msBuildPath, $"\"{projectPath}\" \"/p:OutputPath={outputFolder}\"")
+                    new ProcessStartInfo(msBuildPath, $"\"{projectPath}\" \"/p:OutputPath={outputFolder}\" /p:DefineConstants=\"{RemoveUnityEditorPreprocessor(projectPath)}\"")
                     {
                         UseShellExecute = false,
                         RedirectStandardOutput = true
@@ -75,6 +75,22 @@ namespace OwlcatModification.Editor.Build.Tasks
             }
 
             return ReturnCode.Success;
+        }
+
+        private static string RemoveUnityEditorPreprocessor(string projFilePath) => 
+            GetPreprocessorDefines(projFilePath)
+            .Replace("UNITY_EDITOR;", "");
+
+        private static string GetPreprocessorDefines(string projFilePath)
+        {
+            string defineOpenTag = "<DefineConstants>";
+            string defineCloseTag = "</DefineConstants>";
+
+            var text = File.ReadAllText(projFilePath);
+            var startIndex = text.IndexOf(defineOpenTag) + defineOpenTag.Length;
+            var endIndex = text.IndexOf(defineCloseTag, startIndex);
+
+            return text.Substring(startIndex, endIndex - startIndex);
         }
 
         private static string GetAssemblyName(AssemblyDefinitionAsset asmdef)

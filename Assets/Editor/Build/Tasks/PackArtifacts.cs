@@ -28,7 +28,7 @@ namespace OwlcatModification.Editor.Build.Tasks
 
             using (var zip = new ZipFile())
             {
-                zip.AddDirectory(modificationFolderPath, "./");
+                zip.AddDirectory(modificationFolderPath, $"./{m_ModificationParameters.Manifest.UniqueName}");
                 zip.Save(targetFilePath);
             }
 

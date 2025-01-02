@@ -1,10 +1,14 @@
+using HarmonyLib;
 using Kingmaker.Modding;
+using Kingmaker.Utility;
+using Newtonsoft.Json;
 using OwlcatModification.Editor.Build.Context;
 using OwlcatModification.Editor.Build.Tasks;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection.Emit;
 using UnityEditor;
 using UnityEditor.Build.Pipeline;
 using UnityEditor.Build.Pipeline.Interfaces;
@@ -20,12 +24,13 @@ namespace OwlcatModification.Editor.Build
         public static ReturnCode Build(Modification modification)
         {
             string sourcePath = Path.GetDirectoryName(AssetDatabase.GetAssetPath(modification));
+
             return Build(
                 modification.Manifest,
                 modification.Settings,
                 sourcePath,
                 BuilderConsts.DefaultBuildFolder,
-                null);
+                null); ;
         }
 
         public static ReturnCode Build(
@@ -108,11 +113,66 @@ namespace OwlcatModification.Editor.Build
             var tasksList = GetTasks().ToArray();
             try
             {
-                return RunTasks(tasksList, buildContext);
+                var result = RunTasks(tasksList, buildContext);
+
+                if (result == ReturnCode.Success)
+                    CopyToModDirectory(manifest, targetFolder);
+                return result;
             }
             finally
             {
                 Dispose(contextObjects, tasksList);
+            }
+        }
+        private class SettingsData
+        {
+            [JsonProperty]
+            public List<string> EnabledModifications { get; set; } = new List<string>();
+        }
+
+        private static void CopyToModDirectory(OwlcatModificationManifest manifest, string target)
+        {
+            try
+            {
+                var basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), @"AppData\LocalLow\Owlcat Games\Pathfinder Wrath Of The Righteous\");
+                var settingsFilePath = Path.Combine(basePath, "OwlcatModificationManagerSettings.json");
+                var modPath = Path.Combine(basePath, $@"Modifications\{manifest.UniqueName}\");
+                var targetPath = Path.Combine(target, $@"{manifest.UniqueName}\");
+
+                if (Directory.Exists(modPath))
+                    Directory.Delete(modPath, true);
+
+                Directory.CreateDirectory(modPath);
+
+                string SwapToModPath(string path) 
+                {
+                    var index = path.IndexOf(manifest.UniqueName) + manifest.UniqueName.Length + 1;
+                    return Path.Combine(modPath, path.Remove(0, index));
+                }
+
+                foreach (var dir in Directory.GetDirectories(targetPath, "*", SearchOption.AllDirectories)) 
+                    Directory.CreateDirectory(SwapToModPath(dir));
+
+                foreach (var file in Directory.GetFiles(targetPath, "*.*", SearchOption.AllDirectories))
+                    File.Copy(file, SwapToModPath(file), true);
+
+                Builder.SettingsData settingsData = new Builder.SettingsData();
+
+                if (File.Exists(settingsFilePath))
+                {
+                    var data = JSONHelper.FromJSONFile<Builder.SettingsData>(settingsFilePath);
+                    settingsData.EnabledModifications = data.EnabledModifications.ToList();
+                }
+
+                if(!settingsData.EnabledModifications.Contains(manifest.UniqueName))
+                    settingsData.EnabledModifications.Add(manifest.UniqueName);
+
+                JSONHelper.ToJSONFile(settingsFilePath, settingsData);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError("Error copying to Modification directory");
+                Debug.LogError(ex.Message + ex.StackTrace);
             }
         }
 
